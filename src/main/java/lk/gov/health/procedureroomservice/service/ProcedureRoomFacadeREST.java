@@ -19,6 +19,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import lk.gov.health.procedureroomservice.ProcedureRoom;
+import org.json.simple.JSONObject;
 
 /**
  *
@@ -78,9 +79,11 @@ public class ProcedureRoomFacadeREST extends AbstractFacade<ProcedureRoom> {
 
     @GET
     @Path("count")
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
     public String countREST() {
-        return String.valueOf(super.count());
+        JSONObject jo = new JSONObject();
+        jo.put("room_count", String.valueOf(super.count()));
+        return jo.toJSONString();
     }
 
     @Override

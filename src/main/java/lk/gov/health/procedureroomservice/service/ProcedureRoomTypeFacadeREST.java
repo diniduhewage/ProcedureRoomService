@@ -19,6 +19,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import lk.gov.health.procedureroomservice.ProcedureRoomType;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 /**
  *
@@ -58,30 +60,47 @@ public class ProcedureRoomTypeFacadeREST extends AbstractFacade<ProcedureRoomTyp
     @GET
     @Path("{id}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public ProcedureRoomType find(@PathParam("id") Long id) {
-        return super.find(id);
+    public String find(@PathParam("id") Long id) {
+        return getJSONObject(super.find(id)).toString();
     }
 
     @GET
-    @Override
-//    @Produces("application/json")
     @Produces({MediaType.APPLICATION_JSON})
-    public List<ProcedureRoomType> findAll() {
-        return super.findAll();
+    public String getAll() {
+        JSONArray ja_ = new JSONArray();
+
+        List<ProcedureRoomType> procRoomTypeList;
+        procRoomTypeList = super.findAll();
+
+        for (ProcedureRoomType procRoomType : procRoomTypeList) {
+            ja_.add(getJSONObject(procRoomType));
+        }
+        return ja_.toString(); 
     }
 
     @GET
     @Path("{from}/{to}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public List<ProcedureRoomType> findRange(@PathParam("from") Integer from, @PathParam("to") Integer to) {
-        return super.findRange(new int[]{from, to});
+    public String findRange(@PathParam("from") Integer from, @PathParam("to") Integer to) {
+        JSONArray ja_ = new JSONArray();
+
+        List<ProcedureRoomType> procRoomTypeList;
+        procRoomTypeList = super.findRange(new int[]{from, to});
+
+        for (ProcedureRoomType procRoomType : procRoomTypeList) {
+            ja_.add(getJSONObject(procRoomType));
+        }
+        return ja_.toString();
     }
 
     @GET
     @Path("count")
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
     public String countREST() {
-        return String.valueOf(super.count());
+        JSONObject jo_ = new JSONObject();
+        jo_.put("count", String.valueOf(super.count()));
+
+        return jo_.toString();
     }
 
     @Override
@@ -89,4 +108,14 @@ public class ProcedureRoomTypeFacadeREST extends AbstractFacade<ProcedureRoomTyp
         return em;
     }
     
+    
+    private JSONObject getJSONObject(ProcedureRoomType procType) {
+        JSONObject jo_ = new JSONObject();
+
+        jo_.put("id", procType.getId());
+        jo_.put("typeId", procType.getTypeId());
+        jo_.put("description", procType.getDescription());
+
+        return jo_;
+    }
 }

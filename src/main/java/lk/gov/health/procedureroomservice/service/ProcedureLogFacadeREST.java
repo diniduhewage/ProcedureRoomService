@@ -5,7 +5,10 @@
  */
 package lk.gov.health.procedureroomservice.service;
 
-import java.util.List;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -19,6 +22,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import lk.gov.health.procedureroomservice.ProcedureLog;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 /**
  *
@@ -58,34 +63,42 @@ public class ProcedureLogFacadeREST extends AbstractFacade<ProcedureLog> {
     @GET
     @Path("{id}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public ProcedureLog find(@PathParam("id") Long id) {
-        return super.find(id);
+    public String find(@PathParam("id") Long id) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            return mapper.writeValueAsString(super.find(id));
+        } catch (JsonProcessingException ex) {
+            Logger.getLogger(ProcedureLogFacadeREST.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;        
     }
 
     @GET
-    @Override
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public List<ProcedureLog> findAll() {
-        return super.findAll();
+    public String getAll() {
+        return JSONArray.toJSONString(super.findAll());
     }
 
     @GET
     @Path("{from}/{to}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public List<ProcedureLog> findRange(@PathParam("from") Integer from, @PathParam("to") Integer to) {
-        return super.findRange(new int[]{from, to});
+    public String findRange(@PathParam("from") Integer from, @PathParam("to") Integer to) {  
+        return JSONArray.toJSONString(super.findRange(new int[]{from, to}));
     }
 
     @GET
     @Path("count")
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
     public String countREST() {
-        return String.valueOf(super.count());
+        JSONObject jo_ = new JSONObject();
+        jo_.put("count", String.valueOf(super.count()));
+
+        return jo_.toString();
     }
 
     @Override
     protected EntityManager getEntityManager() {
         return em;
-    }
+    }  
     
 }

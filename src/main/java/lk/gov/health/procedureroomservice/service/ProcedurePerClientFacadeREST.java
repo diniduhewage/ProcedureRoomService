@@ -19,6 +19,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import lk.gov.health.procedureroomservice.ProcedurePerClient;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 /**
  *
@@ -58,34 +60,66 @@ public class ProcedurePerClientFacadeREST extends AbstractFacade<ProcedurePerCli
     @GET
     @Path("{id}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public ProcedurePerClient find(@PathParam("id") Long id) {
-        return super.find(id);
+    public String find(@PathParam("id") Long id) {
+        return getJSONObject(super.find(id)).toString();
     }
 
     @GET
-    @Override
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public List<ProcedurePerClient> findAll() {
-        return super.findAll();
+    public String getAll() {
+        JSONArray ja_ = new JSONArray();
+
+        List<ProcedurePerClient> procPerClientList;
+        procPerClientList = super.findAll();
+
+        for (ProcedurePerClient procPerClient : procPerClientList) {
+            ja_.add(getJSONObject(procPerClient));
+        }
+        return ja_.toString(); 
     }
 
     @GET
     @Path("{from}/{to}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public List<ProcedurePerClient> findRange(@PathParam("from") Integer from, @PathParam("to") Integer to) {
-        return super.findRange(new int[]{from, to});
+    public String findRange(@PathParam("from") Integer from, @PathParam("to") Integer to) {
+        JSONArray ja_ = new JSONArray();
+
+        List<ProcedurePerClient> procPerClientList;
+        procPerClientList = super.findRange(new int[]{from, to});
+
+        for (ProcedurePerClient procPerClient : procPerClientList) {
+            ja_.add(getJSONObject(procPerClient));
+        }
+        return ja_.toString();
     }
 
     @GET
     @Path("count")
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
     public String countREST() {
-        return String.valueOf(super.count());
+        JSONObject jo = new JSONObject();
+        jo.put("count", String.valueOf(super.count()));
+        return jo.toJSONString();
     }
 
     @Override
     protected EntityManager getEntityManager() {
         return em;
+    }
+    
+    private JSONObject getJSONObject(ProcedurePerClient procPerClient) {
+        JSONObject jo_ = new JSONObject();
+
+        jo_.put("id", procPerClient.getId());
+        jo_.put("phn", procPerClient.getPhn());
+        jo_.put("instituteId", procPerClient.getInstituteId());
+        jo_.put("procedureId", procPerClient.getProcedureId());
+        jo_.put("roomId", procPerClient.getRoomId());
+        jo_.put("createdBy", procPerClient.getCreatedBy());
+        jo_.put("createdAt", procPerClient.getCreatedAt());
+        jo_.put("status", procPerClient.getStatus());
+
+        return jo_;
     }
     
 }

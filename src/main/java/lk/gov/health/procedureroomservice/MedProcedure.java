@@ -12,6 +12,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.xml.bind.annotation.XmlRootElement;
+import lk.gov.health.procedureservice.enums.ObjectStatus;
 
 /**
  *
@@ -32,7 +33,7 @@ public class MedProcedure implements Serializable {
     @ManyToOne
     private ProcedureRoomType roomType;
     private String comment;
-    private String status;
+    private ObjectStatus status;
     
 
     public Long getId() {
@@ -108,11 +109,11 @@ public class MedProcedure implements Serializable {
         this.comment = comment;
     }
 
-    public String getStatus() {
+    public ObjectStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(ObjectStatus status) {
         this.status = status;
     }
     

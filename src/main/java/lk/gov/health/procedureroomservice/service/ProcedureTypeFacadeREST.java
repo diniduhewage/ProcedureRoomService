@@ -5,7 +5,9 @@
  */
 package lk.gov.health.procedureroomservice.service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -36,11 +38,12 @@ public class ProcedureTypeFacadeREST extends AbstractFacade<ProcedureType> {
     public ProcedureTypeFacadeREST() {
         super(ProcedureType.class);
     }
-
+    
     @POST
     @Override
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public void create(ProcedureType entity) {
+        entity.setId(null);        
         super.create(entity);
     }
 
@@ -116,5 +119,25 @@ public class ProcedureTypeFacadeREST extends AbstractFacade<ProcedureType> {
         jo_.put("description", procType.getDescription());
 
         return jo_;
+    }
+    
+    @GET
+    @Path("/filer_list/{searchVal}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String findFilteredList(@PathParam("searchVal") String searchVal) {        
+        JSONArray ja_ = new JSONArray();
+        
+        String jpql;
+        Map m = new HashMap();
+        jpql = "SELECT pt FROM ProcedureType pt WHERE upper(pt.procedureType) like :searchVal";
+        
+        m.put("searchVal", "%" + searchVal.toUpperCase() + "%");
+        
+        List<ProcedureType> procTypeList = super.findByJpql(jpql, m);
+        
+        for (ProcedureType procType : procTypeList) {
+            ja_.add(getJSONObject(procType));
+        }
+        return ja_.toString();
     }
 }

@@ -7,6 +7,8 @@ package lk.gov.health.procedureroomservice;
 
 import java.io.Serializable;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -31,6 +33,7 @@ public class ProcedureRoom implements Serializable {
     @ManyToOne
     private ProcedureRoomType type;
     private Long instituteId;
+    @Enumerated(EnumType.STRING)
     private ObjectStatus status;  
     
     public Long getId() {

@@ -36,7 +36,7 @@ public class MedProcedureFacadeREST extends AbstractFacade<MedProcedure> {
     @PersistenceContext(unitName = "hmisPU")
     private EntityManager em;
 
-    public MedProcedureFacadeREST() {
+    public MedProcedureFacadeREST() {        
         super(MedProcedure.class);
     }
 
@@ -44,6 +44,7 @@ public class MedProcedureFacadeREST extends AbstractFacade<MedProcedure> {
     @Override
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public void create(MedProcedure entity) {
+        entity.setId(null);
         super.create(entity);
     }
 

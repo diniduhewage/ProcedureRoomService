@@ -7,6 +7,7 @@ package lk.gov.health.procedureroomservice.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
@@ -22,6 +23,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import lk.gov.health.procedureroomservice.MedProcedure;
+import lk.gov.health.procedureroomservice.ProcedureRoomType;
+import lk.gov.health.procedureroomservice.ProcedureType;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -77,9 +80,23 @@ public class MedProcedureFacadeREST extends AbstractFacade<MedProcedure> {
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public String getAll() {
-        return JSONArray.toJSONString(super.findAll());
+        JSONArray array = new JSONArray();
+        List<MedProcedure> object = super.findAll();
+        
+        for(int i=0; i<object.size(); i++){
+            JSONObject jo = new JSONObject();
+            jo.put("id", object.get(i).getId());
+            jo.put("comment", object.get(i).getComment());
+            jo.put("procId", object.get(i).getProcId());
+            jo.put("description", object.get(i).getDescription());
+            jo.put("roomType", getRoomTypeObjct(object.get(i).getRoomType()));
+            jo.put("procType", getProcTypeObjct(object.get(i).getProcType()));
+            
+            array.add(jo);
     }
-
+        return JSONArray.toJSONString(array);
+    }
+    
     @GET
     @Path("{from}/{to}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
@@ -102,4 +119,22 @@ public class MedProcedureFacadeREST extends AbstractFacade<MedProcedure> {
         return em;
     }
     
+            
+    public JSONObject getRoomTypeObjct(ProcedureRoomType obj){    
+        JSONObject tempObj = new JSONObject();
+        tempObj.put("id", obj.getId());
+        tempObj.put("typeId", obj.getTypeId());
+        tempObj.put("description", obj.getDescription());
+        
+        return tempObj;
+    }
+    
+    public JSONObject getProcTypeObjct(ProcedureType obj){    
+        JSONObject tempObj = new JSONObject();
+        tempObj.put("id", obj.getId());
+        tempObj.put("procedureType", obj.getProcedureType());
+        tempObj.put("description", obj.getDescription());
+        
+        return tempObj;
+    }  
 }

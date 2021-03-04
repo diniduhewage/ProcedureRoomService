@@ -5,7 +5,9 @@
  */
 package lk.gov.health.procedureroomservice.service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -18,6 +20,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import lk.gov.health.procedureroomservice.ProcedureRoom;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -38,17 +41,26 @@ public class ProcedureRoomFacadeREST extends AbstractFacade<ProcedureRoom> {
     }
 
     @POST
-    @Override
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public void create(ProcedureRoom entity) {
-        super.create(entity);
+    public Response Create(ProcedureRoom entity) {
+        if (!checkExists(entity.getRoomId())) {
+            super.create(entity);
+            return Response.status(Response.Status.ACCEPTED).build();
+        } else {
+            return Response.status(Response.Status.CONFLICT).entity("Duplicate Entry..!Unable to create new record").build();
+        }
     }
 
     @PUT
     @Path("{id}")
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public void edit(@PathParam("id") Long id, ProcedureRoom entity) {
-        super.edit(entity);
+    public Response edit(@PathParam("id") Long id, ProcedureRoom entity) {
+        if ((entity.getRoomId() == super.find(id).getRoomId()) || (!checkExists(entity.getRoomId()))) {
+            super.edit(entity);
+            return Response.status(Response.Status.OK).build();
+        } else {
+            return Response.status(Response.Status.CONFLICT).entity("Duplicate Entry..!Unable update the record").build();
+        }
     }
 
     @DELETE
@@ -119,4 +131,19 @@ public class ProcedureRoomFacadeREST extends AbstractFacade<ProcedureRoom> {
 
         return jo_;
     }
+    
+    public boolean checkExists(String searchVal) {
+        String jpql;
+        Map m = new HashMap();
+        jpql = "SELECT pr FROM ProcedureRoom pr WHERE upper(pr.roomId) like :searchVal";
+
+        m.put("searchVal", searchVal.toUpperCase());
+
+        List<ProcedureRoom> procedureRoomList = super.findByJpql(jpql, m);
+
+        if (procedureRoomList.size() > 0) {
+            return true;
+        }
+        return false;
+    }    
 }

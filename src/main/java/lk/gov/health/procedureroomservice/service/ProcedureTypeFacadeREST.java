@@ -20,6 +20,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import lk.gov.health.procedureroomservice.ProcedureType;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -38,20 +39,29 @@ public class ProcedureTypeFacadeREST extends AbstractFacade<ProcedureType> {
     public ProcedureTypeFacadeREST() {
         super(ProcedureType.class);
     }
-    
+
     @POST
-    @Override
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public void create(ProcedureType entity) {
-        entity.setId(null);        
-        super.create(entity);
+    public Response Create(ProcedureType entity) {
+        entity.setId(null);
+        if (!checkExists(entity.getProcedureType())) {
+            super.create(entity);
+            return Response.status(Response.Status.ACCEPTED).build();
+        } else {
+            return Response.status(Response.Status.CONFLICT).entity("Duplicate Entry..!Unable to create new record").build();
+        }
     }
 
     @PUT
     @Path("{id}")
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public void edit(@PathParam("id") Long id, ProcedureType entity) {
-        super.edit(entity);
+    public Response edit(@PathParam("id") Long id, ProcedureType entity) {
+        if ((entity.getProcedureType() == super.find(id).getProcedureType()) || (!checkExists(entity.getProcedureType()))) {
+            super.edit(entity);
+            return Response.status(Response.Status.OK).build();
+        } else {
+            return Response.status(Response.Status.CONFLICT).entity("Duplicate Entry..!Unable update the record").build();
+        }
     }
 
     @DELETE
@@ -65,8 +75,8 @@ public class ProcedureTypeFacadeREST extends AbstractFacade<ProcedureType> {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public String find(@PathParam("id") Long id) {
         return getJSONObject(super.find(id)).toString();
-    }    
-    
+    }
+
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public String getAll() {
@@ -78,7 +88,7 @@ public class ProcedureTypeFacadeREST extends AbstractFacade<ProcedureType> {
         for (ProcedureType procType : procTypeList) {
             ja_.add(getJSONObject(procType));
         }
-        return ja_.toString(); 
+        return ja_.toString();
     }
 
     @GET
@@ -120,24 +130,40 @@ public class ProcedureTypeFacadeREST extends AbstractFacade<ProcedureType> {
 
         return jo_;
     }
-    
+
     @GET
     @Path("/filer_list/{searchVal}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String findFilteredList(@PathParam("searchVal") String searchVal) {        
+    public String findFilteredList(@PathParam("searchVal") String searchVal) {
         JSONArray ja_ = new JSONArray();
-        
+
         String jpql;
         Map m = new HashMap();
         jpql = "SELECT pt FROM ProcedureType pt WHERE upper(pt.procedureType) like :searchVal";
-        
+
         m.put("searchVal", "%" + searchVal.toUpperCase() + "%");
-        
+
         List<ProcedureType> procTypeList = super.findByJpql(jpql, m);
-        
+
         for (ProcedureType procType : procTypeList) {
             ja_.add(getJSONObject(procType));
         }
         return ja_.toString();
     }
+
+    public boolean checkExists(String searchVal) {
+        String jpql;
+        Map m = new HashMap();
+        jpql = "SELECT pt FROM ProcedureType pt WHERE upper(pt.procedureType) like :searchVal";
+
+        m.put("searchVal", searchVal.toUpperCase());
+
+        List<ProcedureType> procTypeListprocTypeList = super.findByJpql(jpql, m);
+
+        if (procTypeListprocTypeList.size() > 0) {
+            return true;
+        }
+        return false;
+    }
+
 }

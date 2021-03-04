@@ -20,6 +20,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import lk.gov.health.procedureroomservice.ProcedureRoomType;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -40,18 +41,28 @@ public class ProcedureRoomTypeFacadeREST extends AbstractFacade<ProcedureRoomTyp
     }
 
     @POST
-    @Override
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public void create(ProcedureRoomType entity) {
+    public Response Create(ProcedureRoomType entity) {
         entity.setId(null);
-        super.create(entity);
+        System.out.println("Status" + checkExists(entity.getTypeId()) );
+        if (!checkExists(entity.getTypeId())) {
+            super.create(entity);
+            return Response.status(Response.Status.ACCEPTED).build();
+        } else {
+            return Response.status(Response.Status.CONFLICT).entity("Duplicate Entry..!Unable to create new record").build();
+        }
     }
 
     @PUT
     @Path("{id}")
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public void edit(@PathParam("id") Long id, ProcedureRoomType entity) {
-        super.edit(entity);
+    public Response edit(@PathParam("id") Long id, ProcedureRoomType entity) {
+        if ((entity.getTypeId() == super.find(id).getTypeId()) || (!checkExists(entity.getTypeId()))) {
+            super.edit(entity);
+            return Response.status(Response.Status.OK).build();
+        } else {
+            return Response.status(Response.Status.CONFLICT).entity("Duplicate Entry..!Unable update new record").build();
+        }
     }
 
     @DELETE
@@ -78,7 +89,7 @@ public class ProcedureRoomTypeFacadeREST extends AbstractFacade<ProcedureRoomTyp
         for (ProcedureRoomType procRoomType : procRoomTypeList) {
             ja_.add(getJSONObject(procRoomType));
         }
-        return ja_.toString(); 
+        return ja_.toString();
     }
 
     @GET
@@ -110,8 +121,7 @@ public class ProcedureRoomTypeFacadeREST extends AbstractFacade<ProcedureRoomTyp
     protected EntityManager getEntityManager() {
         return em;
     }
-    
-    
+
     private JSONObject getJSONObject(ProcedureRoomType procType) {
         JSONObject jo_ = new JSONObject();
 
@@ -121,24 +131,39 @@ public class ProcedureRoomTypeFacadeREST extends AbstractFacade<ProcedureRoomTyp
 
         return jo_;
     }
-    
+
     @GET
-    @Path("/filer_list/{searchVal}")
+    @Path("filer_list/{searchVal}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String findFilteredList(@PathParam("searchVal") String searchVal) {        
+    public String findFilteredList(@PathParam("searchVal") String searchVal) {
         JSONArray ja_ = new JSONArray();
-        
+
         String jpql;
         Map m = new HashMap();
         jpql = "SELECT pr FROM ProcedureRoomType pr WHERE upper(pr.typeId) like :searchVal";
-        
+
         m.put("searchVal", "%" + searchVal.toUpperCase() + "%");
-        
+
         List<ProcedureRoomType> procTypeList = super.findByJpql(jpql, m);
-        
+
         for (ProcedureRoomType procType : procTypeList) {
             ja_.add(getJSONObject(procType));
         }
         return ja_.toString();
+    }
+
+    public boolean checkExists(String searchVal) {
+        String jpql;
+        Map m = new HashMap();
+        jpql = "SELECT pr FROM ProcedureRoomType pr WHERE upper(pr.typeId) like :searchVal";
+
+        m.put("searchVal", searchVal.toUpperCase());
+
+        List<ProcedureRoomType> procRoomTypeList = super.findByJpql(jpql, m);
+
+        if (procRoomTypeList.size() > 0) {
+            return true;
+        }
+        return false;
     }
 }

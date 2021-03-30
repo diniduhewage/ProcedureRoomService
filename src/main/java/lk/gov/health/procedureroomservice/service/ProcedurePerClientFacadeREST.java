@@ -7,7 +7,9 @@ package lk.gov.health.procedureroomservice.service;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -20,11 +22,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import lk.gov.health.procedureroomservice.ClientProcedure;
+import lk.gov.health.procedureroomservice.Institute;
 import lk.gov.health.procedureroomservice.MedProcedure;
 import lk.gov.health.procedureroomservice.ProcedurePerClient;
-import lk.gov.health.procedureroomservice.ProcedureRoom;
+import lk.gov.health.procedureroomservice.ProcedurePerInstitute;
 import lk.gov.health.procedureroomservice.ProcedureRoomType;
 import lk.gov.health.procedureroomservice.ProcedureType;
+import lk.gov.health.procedureservice.enums.ProcPerClientStates;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -35,6 +40,13 @@ import org.json.simple.JSONObject;
 @Stateless
 @Path("lk.gov.health.procedureroomservice.procedureperclient")
 public class ProcedurePerClientFacadeREST extends AbstractFacade<ProcedurePerClient> {
+
+    @EJB
+    private InstituteFacadeREST instituteFacadeREST;
+    @EJB
+    private ProcedurePerInstituteFacadeREST ProcedurePerInstituteFacadeREST;
+    @EJB
+    private ProcedureRoomFacadeREST ProcedureRoomFacadeREST;
 
     @PersistenceContext(unitName = "hmisPU")
     private EntityManager em;
@@ -50,6 +62,52 @@ public class ProcedurePerClientFacadeREST extends AbstractFacade<ProcedurePerCli
         entity.setId(null);
         entity.setCreatedAt(new Date());
         super.create(entity);
+    }
+
+    @POST
+    @Path("/register_procedure")
+    @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public void register_procedure(ClientProcedure entity) {
+        ProcedurePerClient entity_ = new ProcedurePerClient();
+
+        entity_.setId(null);
+        entity_.setPhn(entity.getPhn());
+        entity_.setInstituteId(getInstituteObj(entity.getInstituteCode()));
+        entity_.setProcedureId(getProcedurePerInstitueObj(entity.getProcedureCode()));
+        entity_.setRoomId(getProcedureRoomObj(entity.getRoomId()));
+        entity_.setCreatedBy(entity.getCreatedBy());
+        entity_.setCreatedAt(entity.getCreatedAt());
+        entity_.setStatus(ProcPerClientStates.CREATED);
+        
+        super.create(entity_);
+    }
+
+    private Institute getInstituteObj(String instituteCode) {
+        HashMap<String, Object> m_ = new HashMap<>();
+
+        String jpql_ = "SELECT ins FROM Institute ins WHERE ins.code=:val_";
+        m_.put("code", instituteCode);
+
+        return this.instituteFacadeREST.findByJpql(jpql_, m_).get(0);
+    }
+    
+    private ProcedurePerInstitute getProcedurePerInstitueObj(String procPerInstitute) {
+        HashMap<String, Object> m_ = new HashMap<>();
+
+        String jpql_ = "SELECT pins FROM ProcedurePerInstitute pins WHERE pins.procedure=:val_";
+        m_.put("procedure", procPerInstitute);
+
+        return this.ProcedurePerInstituteFacadeREST.findByJpql(jpql_, m_).get(0);
+    }
+    
+    private Institute getProcedureRoomObj(String procRoom) {
+        HashMap<String, Object> m_ = new HashMap<>();
+
+        String jpql_ = "SELECT pr FROM Institute pr WHERE pr.instituteType = :type_ AND pr.roomId=:val_";
+        m_.put("type_", "Procedure_Room");
+        m_.put("val_", procRoom);
+
+        return this.instituteFacadeREST.findByJpql(jpql_, m_).get(0);
     }
 
     @PUT
@@ -120,24 +178,33 @@ public class ProcedurePerClientFacadeREST extends AbstractFacade<ProcedurePerCli
 
         jo_.put("id", procPerClient.getId());
         jo_.put("phn", procPerClient.getPhn());
-        jo_.put("instituteId", procPerClient.getInstituteId());
-        jo_.put("procedureId", getProcedureJSONObject(procPerClient.getProcedureId()));
-        jo_.put("roomId", getRoomJSONObject(procPerClient.getRoomId()));
+        jo_.put("instituteId", getInstitute(procPerClient.getInstituteId()));
+        jo_.put("procedureId", getProPerInstJSONObject(procPerClient.getProcedureId()));
+        jo_.put("roomId", getInstitute(procPerClient.getRoomId()));
         jo_.put("createdBy", procPerClient.getCreatedBy());
         jo_.put("createdAt", new SimpleDateFormat("yyyy-MM-dd").format(procPerClient.getCreatedAt()));
         jo_.put("status", procPerClient.getStatus().toString());
-        
+
         return jo_;
     }
 
-    private JSONObject getProcedureJSONObject(MedProcedure proc) {
+    private JSONObject getProPerInstJSONObject(ProcedurePerInstitute proc) {
+        JSONObject jo_ = new JSONObject();
+
+        jo_.put("id", proc.getId());
+        jo_.put("procedure", this.getMedProcJSONObject(proc.getProcedure()));
+        jo_.put("institute", this.getInstitute(proc.getInstituteId()));
+
+        return jo_;
+    }
+
+    private JSONObject getMedProcJSONObject(MedProcedure proc) {
         JSONObject jo_ = new JSONObject();
 
         jo_.put("id", proc.getId());
         jo_.put("procId", proc.getProcId());
         jo_.put("description", proc.getDescription());
         jo_.put("procType", getProcTypeObject(proc.getProcType()));
-        jo_.put("roomType", getRoomTypeObjct(proc.getRoomType()));
         jo_.put("comment", proc.getComment());
         jo_.put("status", proc.getStatus().toString());
 
@@ -160,19 +227,44 @@ public class ProcedurePerClientFacadeREST extends AbstractFacade<ProcedurePerCli
         tempObj.put("description", obj.getDescription());
 
         return tempObj;
+    }   
+
+    public JSONObject getInstitute(Institute obj) {
+        JSONObject tempObj = new JSONObject();
+        tempObj.put("id", obj.getId());
+        tempObj.put("code", obj.getCode());
+        tempObj.put("institute_type_db", obj.getIntituteTypeDb());
+        tempObj.put("institute_type", obj.getIntituteType());
+        tempObj.put("hin", obj.getHin());
+        tempObj.put("address", obj.getAddress());
+        tempObj.put("provinceId", obj.getProvinceId());
+        tempObj.put("districtId", obj.getDistrictId());
+
+        return tempObj;
     }
 
-    private JSONObject getRoomJSONObject(ProcedureRoom procRoom) {
-        JSONObject jo_ = new JSONObject();
+    public InstituteFacadeREST getInstituteFacadeREST() {
+        return instituteFacadeREST;
+    }
 
-        jo_.put("id", procRoom.getId());
-        jo_.put("roomId", procRoom.getRoomId());
-        jo_.put("description", procRoom.getDescription());
-        jo_.put("type", getRoomTypeObjct(procRoom.getType()));
-        jo_.put("instituteId", procRoom.getInstituteId());
-        jo_.put("status", procRoom.getStatus().toString());
+    public void setInstituteFacadeREST(InstituteFacadeREST instituteFacadeREST) {
+        this.instituteFacadeREST = instituteFacadeREST;
+    }
 
-        return jo_;
+    public ProcedurePerInstituteFacadeREST getProcedurePerInstituteFacadeREST() {
+        return ProcedurePerInstituteFacadeREST;
+    }
+
+    public void setProcedurePerInstituteFacadeREST(ProcedurePerInstituteFacadeREST ProcedurePerInstituteFacadeREST) {
+        this.ProcedurePerInstituteFacadeREST = ProcedurePerInstituteFacadeREST;
+    }
+
+    public ProcedureRoomFacadeREST getProcedureRoomFacadeREST() {
+        return ProcedureRoomFacadeREST;
+    }
+
+    public void setProcedureRoomFacadeREST(ProcedureRoomFacadeREST ProcedureRoomFacadeREST) {
+        this.ProcedureRoomFacadeREST = ProcedureRoomFacadeREST;
     }
 
 }

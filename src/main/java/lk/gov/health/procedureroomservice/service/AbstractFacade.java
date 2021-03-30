@@ -13,6 +13,8 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.ParameterExpression;
+import javax.persistence.criteria.Predicate;
 
 /**
  *
@@ -83,6 +85,43 @@ public abstract class AbstractFacade<T> {
             }
         }
         return qry.getResultList();
-    }     
+    }  
     
+    public T findByField(String fieldName, String fieldValue) {
+        List<T> lstAll = findExact(fieldName, fieldValue);
+        if (lstAll.isEmpty()) {
+            return null;
+        } else {
+            return lstAll.get(0);
+        }
+    }
+    
+    public List<T> findExact(String fieldName, String fieldValue) {
+        javax.persistence.criteria.CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+        javax.persistence.criteria.CriteriaQuery<T> cq = cb.createQuery(entityClass);
+        javax.persistence.criteria.Root<T> rt = cq.from(entityClass);
+        ParameterExpression<String> p = cb.parameter(String.class);
+//        Predicate predicateField = cb.like(rt.<String>get(fieldName), fieldValue);
+        Predicate predicateField = cb.equal(cb.upper(rt.<String>get(fieldName)), fieldValue.toLowerCase());
+//        Predicate predicateRetired = cb.equal(rt.<Boolean>get("retired"), false);
+//        Predicate predicateFieldRetired = cb.and(predicateField, predicateRetired);
+
+//        if (withoutRetired && !fieldValue.equals("")) {
+//            cq.where(predicateFieldRetired);
+//        } else if (withoutRetired) {
+//            cq.where(predicateRetired);
+//        } else if (!fieldValue.equals("")) {
+//            cq.where(predicateField);
+//        }
+//        
+        if (!fieldValue.equals("")) {
+            cq.where(predicateField);
+        }
+
+        if (!fieldName.equals("")) {
+            cq.orderBy(cb.asc(rt.get(fieldName)));
+        }
+
+        return getEntityManager().createQuery(cq).getResultList();
+    }
 }

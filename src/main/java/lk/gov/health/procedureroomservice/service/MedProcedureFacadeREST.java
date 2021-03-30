@@ -7,7 +7,9 @@ package lk.gov.health.procedureroomservice.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
@@ -39,7 +41,7 @@ public class MedProcedureFacadeREST extends AbstractFacade<MedProcedure> {
     @PersistenceContext(unitName = "hmisPU")
     private EntityManager em;
 
-    public MedProcedureFacadeREST() {        
+    public MedProcedureFacadeREST() {
         super(MedProcedure.class);
     }
 
@@ -74,33 +76,25 @@ public class MedProcedureFacadeREST extends AbstractFacade<MedProcedure> {
         } catch (JsonProcessingException ex) {
             Logger.getLogger(ProcedureLogFacadeREST.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return null; 
+        return null;
     }
 
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public String getAll() {
         JSONArray array = new JSONArray();
-        List<MedProcedure> object = super.findAll();
-        
-        for(int i=0; i<object.size(); i++){
-            JSONObject jo = new JSONObject();
-            jo.put("id", object.get(i).getId());
-            jo.put("comment", object.get(i).getComment());
-            jo.put("procId", object.get(i).getProcId());
-            jo.put("description", object.get(i).getDescription());
-            jo.put("roomType", getRoomTypeObjct(object.get(i).getRoomType()));
-            jo.put("procType", getProcTypeObjct(object.get(i).getProcType()));
-            
-            array.add(jo);
-    }
+        List<MedProcedure> medProcedureList = super.findAll();
+
+        for (MedProcedure mp_ : medProcedureList) {
+            array.add(getJSONObject(mp_));
+        }
         return JSONArray.toJSONString(array);
     }
-    
+
     @GET
     @Path("{from}/{to}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public String findRange(@PathParam("from") Integer from, @PathParam("to") Integer to) {        
+    public String findRange(@PathParam("from") Integer from, @PathParam("to") Integer to) {
         return JSONArray.toJSONString(super.findRange(new int[]{from, to}));
     }
 
@@ -118,23 +112,54 @@ public class MedProcedureFacadeREST extends AbstractFacade<MedProcedure> {
     protected EntityManager getEntityManager() {
         return em;
     }
-    
-            
-    public JSONObject getRoomTypeObjct(ProcedureRoomType obj){    
+
+    private JSONObject getJSONObject(MedProcedure mp_) {
+        JSONObject jo_ = new JSONObject();
+        jo_.put("id", mp_.getId());
+        jo_.put("comment", mp_.getComment());
+        jo_.put("procId", mp_.getProcId());
+        jo_.put("description", mp_.getDescription());
+        jo_.put("procType", getProcTypeObjct(mp_.getProcType()));
+        jo_.put("status", mp_.getStatus().toString());
+
+        return jo_;
+    }
+
+    public JSONObject getRoomTypeObjct(ProcedureRoomType obj) {
         JSONObject tempObj = new JSONObject();
         tempObj.put("id", obj.getId());
         tempObj.put("typeId", obj.getTypeId());
         tempObj.put("description", obj.getDescription());
-        
+
         return tempObj;
     }
-    
-    public JSONObject getProcTypeObjct(ProcedureType obj){    
+
+    public JSONObject getProcTypeObjct(ProcedureType obj) {
         JSONObject tempObj = new JSONObject();
         tempObj.put("id", obj.getId());
         tempObj.put("procedureType", obj.getProcedureType());
         tempObj.put("description", obj.getDescription());
-        
+
         return tempObj;
-    }  
+    }
+
+    @GET
+    @Path("/filer_list/{searchVal}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String findFilteredList(@PathParam("searchVal") String searchVal) {
+        JSONArray ja_ = new JSONArray();
+
+        String jpql;
+        Map m = new HashMap();
+        jpql = "SELECT pr FROM MedProcedure pr WHERE upper(pr.procId) like :searchVal";
+
+        m.put("searchVal", "%" + searchVal.toUpperCase() + "%");
+
+        List<MedProcedure> medProcedureList = super.findByJpql(jpql, m);
+
+        for (MedProcedure mp_ : medProcedureList) {
+            ja_.add(getJSONObject(mp_));
+        }
+        return ja_.toString();
+    }
 }

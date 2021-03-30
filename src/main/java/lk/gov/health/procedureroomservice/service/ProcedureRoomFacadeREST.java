@@ -20,6 +20,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import lk.gov.health.procedureroomservice.Institute;
 import lk.gov.health.procedureroomservice.ProcedureRoom;
 import lk.gov.health.procedureroomservice.ProcedureRoomType;
 import org.json.simple.JSONArray;
@@ -138,7 +139,7 @@ public class ProcedureRoomFacadeREST extends AbstractFacade<ProcedureRoom> {
         jo_.put("roomId", procRoom.getRoomId());
         jo_.put("description", procRoom.getDescription());
         jo_.put("type", getRoomTypeObjct(procRoom.getType()));
-        jo_.put("instituteId", procRoom.getInstituteId());
+        jo_.put("instituteId",getInstitute( procRoom.getInstituteId()));
         jo_.put("status", procRoom.getStatus().toString());
 
         return jo_;
@@ -152,4 +153,18 @@ public class ProcedureRoomFacadeREST extends AbstractFacade<ProcedureRoom> {
         
         return tempObj;
     }
+    
+    public JSONObject getInstitute(Institute obj){    
+        JSONObject tempObj = new JSONObject();
+        tempObj.put("id", obj.getId());
+        tempObj.put("code", obj.getCode());
+        tempObj.put("hin", obj.getHin());
+        tempObj.put("institute_type_db", obj.getIntituteTypeDb());
+        tempObj.put("institute_type", obj.getIntituteType());
+        tempObj.put("address", obj.getAddress());
+        tempObj.put("provinceId", obj.getProvinceId());
+        tempObj.put("districtId", obj.getDistrictId());
+        
+        return tempObj;
+    }    
 }

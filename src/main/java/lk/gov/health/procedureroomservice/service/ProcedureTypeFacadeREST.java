@@ -19,6 +19,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import lk.gov.health.procedureroomservice.ProcedureType;
 import org.json.simple.JSONArray;
@@ -38,13 +39,14 @@ public class ProcedureTypeFacadeREST extends AbstractFacade<ProcedureType> {
     public ProcedureTypeFacadeREST() {
         super(ProcedureType.class);
     }
-    
+
     @POST
-    @Override
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public void create(ProcedureType entity) {
-        entity.setId(null);        
-        super.create(entity);
+    public void create(@QueryParam("api_key") String apiKey, ProcedureType entity) {
+        if (apiKey != null && !apiKey.trim().equals("") && apiKey.trim().equals("EF16A5D4EF8AA6AA0580AF1390CF0600")) {
+            entity.setId(null);
+            super.create(entity);
+        }
     }
 
     @PUT
@@ -65,8 +67,8 @@ public class ProcedureTypeFacadeREST extends AbstractFacade<ProcedureType> {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public String find(@PathParam("id") Long id) {
         return getJSONObject(super.find(id)).toString();
-    }    
-    
+    }
+
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public String getAll() {
@@ -78,7 +80,7 @@ public class ProcedureTypeFacadeREST extends AbstractFacade<ProcedureType> {
         for (ProcedureType procType : procTypeList) {
             ja_.add(getJSONObject(procType));
         }
-        return ja_.toString(); 
+        return ja_.toString();
     }
 
     @GET
@@ -120,24 +122,32 @@ public class ProcedureTypeFacadeREST extends AbstractFacade<ProcedureType> {
 
         return jo_;
     }
-    
+
     @GET
     @Path("/filer_list/{searchVal}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String findFilteredList(@PathParam("searchVal") String searchVal) {        
+    public String findFilteredList(@PathParam("searchVal") String searchVal) {
         JSONArray ja_ = new JSONArray();
-        
+
         String jpql;
         Map m = new HashMap();
         jpql = "SELECT pt FROM ProcedureType pt WHERE upper(pt.procedureType) like :searchVal";
-        
+
         m.put("searchVal", "%" + searchVal.toUpperCase() + "%");
-        
+
         List<ProcedureType> procTypeList = super.findByJpql(jpql, m);
-        
+
         for (ProcedureType procType : procTypeList) {
             ja_.add(getJSONObject(procType));
         }
         return ja_.toString();
+    }
+
+    private JSONObject errorMessage() {
+        JSONObject jSONObjectOut = new JSONObject();
+        jSONObjectOut.put("code", 400);
+        jSONObjectOut.put("type", "error");
+        jSONObjectOut.put("message", "Authorization issue, Please contact your system admin.");
+        return jSONObjectOut;
     }
 }

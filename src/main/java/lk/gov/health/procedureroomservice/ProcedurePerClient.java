@@ -31,17 +31,17 @@ public class ProcedurePerClient implements Serializable {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private String phn;
-    private Long instituteId;
     @ManyToOne
-    private MedProcedure procedureId;
+    private Institute instituteId;
     @ManyToOne
-    private ProcedureRoom roomId;
-    private Long createdBy; 
+    private ProcedurePerInstitute procedureId;
+    @ManyToOne
+    private Institute roomId;
+    private String createdBy;
     @Temporal(javax.persistence.TemporalType.TIMESTAMP)
     private Date createdAt;
     @Enumerated(EnumType.STRING)
-    private ProcPerClientStates status;   
-    
+    private ProcPerClientStates status;
 
     public Long getId() {
         return id;
@@ -84,36 +84,12 @@ public class ProcedurePerClient implements Serializable {
         this.phn = phn;
     }
 
-    public Long getInstituteId() {
+    public Institute getInstituteId() {
         return instituteId;
     }
 
-    public void setInstituteId(Long instituteId) {
+    public void setInstituteId(Institute instituteId) {
         this.instituteId = instituteId;
-    }
-
-    public MedProcedure getProcedureId() {
-        return procedureId;
-    }
-
-    public void setProcedureId(MedProcedure procedureId) {
-        this.procedureId = procedureId;
-    }
-
-    public ProcedureRoom getRoomId() {
-        return roomId;
-    }
-
-    public void setRoomId(ProcedureRoom roomId) {
-        this.roomId = roomId;
-    }
-
-    public Long getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(Long createdBy) {
-        this.createdBy = createdBy;
     }
 
     public ProcPerClientStates getStatus() {
@@ -131,5 +107,29 @@ public class ProcedurePerClient implements Serializable {
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
     }
-    
+
+    public ProcedurePerInstitute getProcedureId() {
+        return procedureId;
+    }
+
+    public void setProcedureId(ProcedurePerInstitute procedureId) {
+        this.procedureId = procedureId;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public Institute getRoomId() {
+        return roomId;
+    }
+
+    public void setRoomId(Institute roomId) {
+        this.roomId = roomId;
+    }
+
 }

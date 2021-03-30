@@ -5,7 +5,9 @@
  */
 package lk.gov.health.procedureroomservice.service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -19,6 +21,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import lk.gov.health.procedureroomservice.ProcedureRoom;
+import lk.gov.health.procedureroomservice.ProcedureRoomType;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -41,6 +44,7 @@ public class ProcedureRoomFacadeREST extends AbstractFacade<ProcedureRoom> {
     @Override
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public void create(ProcedureRoom entity) {
+        entity.setId(null);
         super.create(entity);
     }
 
@@ -75,7 +79,7 @@ public class ProcedureRoomFacadeREST extends AbstractFacade<ProcedureRoom> {
         for (ProcedureRoom procRoom : procRoomList) {
             ja_.add(getJSONObject(procRoom));
         }
-        return ja_.toString(); 
+        return JSONArray.toJSONString(ja_); 
     }
 
     @GET
@@ -101,6 +105,26 @@ public class ProcedureRoomFacadeREST extends AbstractFacade<ProcedureRoom> {
         jo.put("count", String.valueOf(super.count()));
         return jo.toJSONString();
     }
+    
+    @GET
+    @Path("/filer_list/{searchVal}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String findFilteredList(@PathParam("searchVal") String searchVal) {        
+        JSONArray ja_ = new JSONArray();
+        
+        String jpql;
+        Map m = new HashMap();
+        jpql = "SELECT pr FROM ProcedureRoom pr WHERE upper(pr.roomId) like :searchVal";
+        
+        m.put("searchVal", "%" + searchVal.toUpperCase() + "%");
+        
+        List<ProcedureRoom> procRoomList = super.findByJpql(jpql, m);
+        
+        for (ProcedureRoom procRoom : procRoomList) {
+            ja_.add(getJSONObject(procRoom));
+        }
+        return ja_.toString();
+    }
 
     @Override
     protected EntityManager getEntityManager() {
@@ -113,10 +137,19 @@ public class ProcedureRoomFacadeREST extends AbstractFacade<ProcedureRoom> {
         jo_.put("id", procRoom.getId());
         jo_.put("roomId", procRoom.getRoomId());
         jo_.put("description", procRoom.getDescription());
-        jo_.put("type", procRoom.getType());
+        jo_.put("type", getRoomTypeObjct(procRoom.getType()));
         jo_.put("instituteId", procRoom.getInstituteId());
-        jo_.put("status", procRoom.getStatus());
+        jo_.put("status", procRoom.getStatus().toString());
 
         return jo_;
+    }
+    
+    public JSONObject getRoomTypeObjct(ProcedureRoomType obj){    
+        JSONObject tempObj = new JSONObject();
+        tempObj.put("id", obj.getId());
+        tempObj.put("typeId", obj.getTypeId());
+        tempObj.put("description", obj.getDescription());
+        
+        return tempObj;
     }
 }

@@ -7,14 +7,10 @@ package lk.gov.health.procedureroomservice;
 
 import java.io.Serializable;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.ManyToOne;
 import javax.xml.bind.annotation.XmlRootElement;
-import lk.gov.health.procedureservice.enums.ObjectStatus;
 
 /**
  *
@@ -22,19 +18,14 @@ import lk.gov.health.procedureservice.enums.ObjectStatus;
  */
 @Entity
 @XmlRootElement
-public class MedProcedure implements Serializable {
+public class ProcedureGroup implements Serializable {
 
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    private String procId;
+    private String procGroup;
     private String description;
-    @ManyToOne
-    private ProcedureType procType;
-    private String comment;
-    @Enumerated(EnumType.STRING)
-    private ObjectStatus status;
 
     public Long getId() {
         return id;
@@ -54,10 +45,10 @@ public class MedProcedure implements Serializable {
     @Override
     public boolean equals(Object object) {
         // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof MedProcedure)) {
+        if (!(object instanceof ProcedureGroup)) {
             return false;
         }
-        MedProcedure other = (MedProcedure) object;
+        ProcedureGroup other = (ProcedureGroup) object;
         if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
             return false;
         }
@@ -66,15 +57,15 @@ public class MedProcedure implements Serializable {
 
     @Override
     public String toString() {
-        return "lk.gov.health.procedureroomservice.MedProcedure[ id=" + id + " ]";
+        return "lk.gov.health.procedureroomservice.ProcedureGroup[ id=" + id + " ]";
     }
 
-    public String getProcId() {
-        return procId;
+    public String getProcGroup() {
+        return procGroup;
     }
 
-    public void setProcId(String procId) {
-        this.procId = procId;
+    public void setProcGroup(String procGroup) {
+        this.procGroup = procGroup;
     }
 
     public String getDescription() {
@@ -84,29 +75,5 @@ public class MedProcedure implements Serializable {
     public void setDescription(String description) {
         this.description = description;
     }
-
-    public ProcedureType getProcType() {
-        return procType;
-    }
-
-    public void setProcType(ProcedureType procType) {
-        this.procType = procType;
-    }
-
-    public String getComment() {
-        return comment;
-    }
-
-    public void setComment(String comment) {
-        this.comment = comment;
-    }
-
-    public ObjectStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(ObjectStatus status) {
-        this.status = status;
-    }
-
+    
 }

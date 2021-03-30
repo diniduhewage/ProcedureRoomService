@@ -11,7 +11,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.ManyToOne;
 import javax.persistence.Temporal;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -21,21 +20,20 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @Entity
 @XmlRootElement
-public class ProcedureLog implements Serializable {
+public class ClientProcedure implements Serializable {
 
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    @ManyToOne
-    private ProcedurePerClient procPerClientId;
     private String phn;
-    @ManyToOne
-    private Institute instituteId;
+    private String instituteCode;
+    private String roomId;
+    private String procedureCode;
+    private String createdBy;
     @Temporal(javax.persistence.TemporalType.TIMESTAMP)
     private Date createdAt;
-    private String activity;    
-    
+    private String status;
 
     public Long getId() {
         return id;
@@ -55,10 +53,10 @@ public class ProcedureLog implements Serializable {
     @Override
     public boolean equals(Object object) {
         // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof ProcedureLog)) {
+        if (!(object instanceof ClientProcedure)) {
             return false;
         }
-        ProcedureLog other = (ProcedureLog) object;
+        ClientProcedure other = (ClientProcedure) object;
         if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
             return false;
         }
@@ -67,15 +65,7 @@ public class ProcedureLog implements Serializable {
 
     @Override
     public String toString() {
-        return "lk.gov.health.procedureroomservice.ProcedureLog[ id=" + id + " ]";
-    }
-
-    public ProcedurePerClient getProcPerClientId() {
-        return procPerClientId;
-    }
-
-    public void setProcPerClientId(ProcedurePerClient procPerClientId) {
-        this.procPerClientId = procPerClientId;
+        return "lk.gov.health.procedureroomservice.ClientProcedure[ id=" + id + " ]";
     }
 
     public String getPhn() {
@@ -86,12 +76,36 @@ public class ProcedureLog implements Serializable {
         this.phn = phn;
     }
 
-    public Institute getInstituteId() {
-        return instituteId;
+    public String getInstituteCode() {
+        return instituteCode;
     }
 
-    public void setInstituteId(Institute instituteId) {
-        this.instituteId = instituteId;
+    public void setInstituteCode(String instituteCode) {
+        this.instituteCode = instituteCode;
+    }
+
+    public String getRoomId() {
+        return roomId;
+    }
+
+    public void setRoomId(String roomId) {
+        this.roomId = roomId;
+    }
+
+    public String getProcedureCode() {
+        return procedureCode;
+    }
+
+    public void setProcedureCode(String procedureCode) {
+        this.procedureCode = procedureCode;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
     }
 
     public Date getCreatedAt() {
@@ -102,12 +116,11 @@ public class ProcedureLog implements Serializable {
         this.createdAt = createdAt;
     }
 
-    public String getActivity() {
-        return activity;
+    public String getStatus() {
+        return status;
     }
 
-    public void setActivity(String activity) {
-        this.activity = activity;
-    }
-    
+    public void setStatus(String status) {
+        this.status = status;
+    } 
 }
